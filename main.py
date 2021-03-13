@@ -5,7 +5,8 @@ from pygame import *
 from diplomacy import Game
 from diplomacy.utils.export import to_saved_game_format
 
-#penis
+# penis
+# dupa
 class VisualTerit:
     def __init__(self, short, position, path=""):
         self.short = short
