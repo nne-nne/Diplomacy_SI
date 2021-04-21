@@ -2,30 +2,19 @@ import itertools
 import json
 import pickle
 import random
-import sys
-import pygame
-import pygame.gfxdraw
-import os, psutil
-import numpy as np
-from diplomacy.utils.order_results import OrderResult
-
+from GameVisualizer import *
+from Hasher import *
 from pygame import *
 from diplomacy import Game, Power
 from collections import defaultdict
 from diplomacy.utils.export import to_saved_game_format, load_saved_games_from_disk
 
-
-
 def make_new_entry(power_name) -> dict:
     power_posible_orders = {loc: {order: 0 for order in game.get_all_possible_orders()[loc]} for loc in
                             game.get_orderable_locations(power_name)
                             if game.get_all_possible_orders()[loc]}
-
     # print(power_posible_orders)
-
     return power_posible_orders
-
-
 def set_gein(power: Power, phase) -> int:
     reward_swither = {
         "bounce": -2,  # odbicie od w trakcie ataku
@@ -43,22 +32,14 @@ def set_gein(power: Power, phase) -> int:
                 reward += 0.1 #udalo sie wykonac akcje
             for status in statuses:
                 reward += reward_swither[status.message]
-
     return reward
-
-
 def get_hash(power_name) -> str:
     return game.get_hash()
-
-
 def defualtvalue() -> str:
     return "Not Present"
-
-
 q_table = defaultdict(defualtvalue)
 for power_name, _ in game.powers.items():
     q_table[power_name] = defaultdict(defualtvalue)
-
 try:
     a_file = open("data.json", "r")
     q_table = json.load(a_file)
@@ -67,20 +48,17 @@ try:
     a_file.close()
 except:
     print("")
-
 iterator = 0
 state = 0
 while not game.is_game_done:
     iterator += 1
     paint_map()
     # For each power, randomly sampling a valid order
-
     power_orders = {}
     nation_location_orders = {}
     power_hash = {}
     power_influence = {}
     phase = game.phase_type
-
     for power_name, power in game.powers.items():
         power_hash[power_name] = get_hash(power_name)
         power_influence[power_name] = power.influence.__len__()
@@ -113,10 +91,10 @@ while not game.is_game_done:
             q_table[power_name][power_hash[power_name]][loc_order[0]][loc_order[1]] += \
                 (power.influence.__len__() - power_influence[power_name])*10 + reward
 
+    visualizer.paint_map(game)
 
 
 
-    # paint_map()
     if iterator == 2:
         state += 1
         iterator = 0
@@ -126,4 +104,6 @@ while not game.is_game_done:
         a_file.close()
         game = load_saved_games_from_disk("game.json")[0]
 
-# to_saved_game_format(game, output_path='game.json')
+    visualizer.paint_orders(game)
+
+    adjust_influence(game)
