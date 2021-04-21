@@ -2,6 +2,8 @@ import itertools
 import json
 import pickle
 import random
+import numpy as np
+
 from GameVisualizer import *
 from Hasher import *
 from pygame import *
@@ -37,6 +39,10 @@ def get_hash(power_name) -> str:
     return game.get_hash()
 def defualtvalue() -> str:
     return "Not Present"
+game = Game()
+set_starting_influence(game)
+visualizer = GameVisualizer()
+
 q_table = defaultdict(defualtvalue)
 for power_name, _ in game.powers.items():
     q_table[power_name] = defaultdict(defualtvalue)
@@ -52,8 +58,8 @@ iterator = 0
 state = 0
 while not game.is_game_done:
     iterator += 1
-    paint_map()
-    # For each power, randomly sampling a valid order
+    visualizer.paint_map(game)
+
     power_orders = {}
     nation_location_orders = {}
     power_hash = {}
@@ -79,10 +85,7 @@ while not game.is_game_done:
             nation_location_orders[power_name][loc] = order  # potrzebne do obliczania reward
         game.set_orders(power_name, power_orders[power_name])
 
-    paint_orders()
-    # wait_for_any_key()
-    # Processing the game to move to the next phase
-    #print("next phase")
+    visualizer.paint_orders(game)
     game.process()
     # set reward
     for power_name, power in game.powers.items():
