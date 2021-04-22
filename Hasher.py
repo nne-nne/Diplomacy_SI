@@ -1,6 +1,5 @@
 from DiplomacyHelper import *
 
-
 def get_locs_of_interest(game, player_power):
     result = []
     result.extend(game.get_centers(player_power))
@@ -45,6 +44,7 @@ def get_hash(game, player_power):
     # 'R' wroga flota w naszym mieście
 
     result = list('-' * len(game.map.locs))
+    result.append(game.get_current_phase()[-1])
     locations_of_interest = get_locs_of_interest(game, player_power)
 
     for i in range(len(game.map.locs)):
