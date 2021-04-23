@@ -3,17 +3,39 @@ from pygame import *
 from DiplomacyHelper import *
 import pygame.gfxdraw
 import sys
+import numpy as np
 
 
-def dir_v(s, d):
+def dir_vec(s, d):
     x = d[0] - s[0]
     y = d[1] - s[1]
     return x, y
 
+def midpoint(s, d):
+    return (s[0] + d[0])/2, (s[1] + d[1])/2
 
 def interpolation(s, d, v):
-    direction = dir_v(s, d)
+    direction = dir_vec(s, d)
     return v * direction[0], v * direction[1]
+
+
+def vec180(vec):
+    return -1 * vec[0], -1 * vec[1]
+
+def vec_clockwise90(vec):
+    return vec[1], -1 * vec[0]
+
+def vec_counterclockwise90(vec):
+    return -1 * vec[1], vec[0]
+
+
+def vec_of_length(vec, length):
+    ratio =  length / np.linalg.norm(vec)
+    return vec[0] * ratio, vec[1] * ratio
+
+
+def move_by_vec(point, vec):
+    return point[0]+vec[0], point[1]+vec[1]
 
 
 def wait_for_any_key():
@@ -108,6 +130,13 @@ class GameVisualizer:
                 (175, 157, 103, 255),
                 (255, 238, 231, 255),
                 (161, 114, 99, 255)]
+        self.alt_power_colors = [(231, 231, 153, 255),
+                (210, 44, 92, 255),
+                (104, 186, 216, 255),
+                (144, 96, 118, 255),
+                (143, 208, 80, 255),
+                (129, 146, 151, 255),
+                (206, 130, 82, 255)]
         self.special_colors = {'bcg': (187, 187, 187, 255),
                                'borders': (0, 0, 0, 255),
                                'sea_borders': (255, 255, 255, 130),
@@ -197,13 +226,10 @@ class GameVisualizer:
             }
         # import images
         self.bcg = image.load('background.bmp')
-        self.borders = image.load('borders2.png')
         self.seaborders = image.load('seaborders.png')
         self.heightmap = image.load('heightmap.png')
         self.papertexture = image.load('newspaper2.png')
-        self.forts = image.load('forts.png')
-        self.shield = image.load('shield.png')
-        self.arrow = image.load('arrow.png')
+        self.mapgizmos = image.load('MapGizmos.png')
 
     def draw_tinted(self, img, col, pos=(0, 0)):
         tinted = img.convert_alpha()
@@ -220,6 +246,10 @@ class GameVisualizer:
         x, y = pos
         pygame.draw.rect(self.screen, (0, 0, 0, 255), (x - w / 2 - 4, y - h / 2 - 4, w + 8, h + 8))
         pygame.draw.rect(self.screen, col, (x - w / 2, y - h / 2, w, h))
+
+    def draw_defense(self, pos, col):
+        size = 20
+        pygame.draw.rect(self.screen, col, (pos[0] - size/2, pos[1] - size/2, size, size), 5)
 
     def paint_terits(self, game):
         for t in self.visual_terits:
@@ -238,51 +268,68 @@ class GameVisualizer:
                 unit_type = unit[0]
                 position = self.army_positions.get(unit[2:])
                 if unit_type == 'A':
-                    self.draw_army(position, self.power_colors[i])
+                    self.draw_army(position, self.alt_power_colors[i])
                 else:
-                    self.draw_fleet(position, self.power_colors[i])
+                    self.draw_fleet(position, self.alt_power_colors[i])
 
     def paint_map(self, game):
         self.screen.fill(self.special_colors.get('bcg'))
         self.draw_tinted(self.papertexture, (0, 0, 0, 30))
         self.paint_terits(game)
-        self.draw_tinted(self.borders, self.special_colors.get('borders'))
         self.draw_tinted(self.seaborders, self.special_colors.get('sea_borders'))
         self.draw_tinted(self.heightmap, (0, 0, 0, 40))
-        self.screen.blit(self.forts, (0, 0))
+        self.draw_tinted(self.mapgizmos, self.special_colors.get('borders'))
         textsurface = self.myfont.render(game.get_current_phase(), False, (0, 0, 0))
         self.screen.blit(textsurface, (0, 0))
         self.paint_troops(game)
         display.update()
 
     def draw_arrow(self, s, d, col):
-        direction = dir_v(s, d)
-        udir = direction[1], -direction[0]
-        m1 = s[0] + 0.75 * direction[0] - 0.05 * udir[0], s[1] + 0.75 * direction[1] - 0.05 * udir[1]
-        m2 = s[0] + 0.75 * direction[0] + 0.05 * udir[0], s[1] + 0.75 * direction[1] + 0.05 * udir[1]
-        mcol = col[0], col[1], col[2], 180
-        pygame.gfxdraw.filled_polygon(self.screen, (s, m1, d, m2), (0, 0, 0, 255))
-        pygame.gfxdraw.filled_polygon(self.screen, (s, m1, d, m2), mcol)
+        width = 10
+        direction = dir_vec(s, d)
+        udir = vec_counterclockwise90(direction)
+        m1 = move_by_vec(s, vec_of_length(udir, width))
+        m2 = move_by_vec(d, vec_of_length(udir, width/2))
+        mcol = col[0], col[1], col[2], 220
+        pygame.gfxdraw.filled_polygon(self.screen, (s, m1, m2), mcol)
+
+    def draw_supp_o(self, source, supported, destination, col):
+        joint = move_by_vec(supported, interpolation(supported, destination, 0.7))
+        pygame.draw.line(self.screen, col, source, joint, 3)
+        pygame.draw.line(self.screen, col, joint, destination, 3)
+        pygame.draw.circle(self.screen, col, joint, 6)
+
+    def draw_supp_d(self, source, destination, col):
+        size = 6
+        step = 10
+        vec = dir_vec(source, destination)
+        udir = vec_counterclockwise90(vec)
+        s = move_by_vec(source, vec_of_length(udir, 5))
+        length = np.linalg.norm(vec)
+        n = int(length // step)
+        for i in range(n):
+            pos = move_by_vec(s, interpolation(s, destination, i/n))
+            pygame.draw.rect(self.screen, col, (pos[0] - size/2, pos[1] - size/2, size, size), 3)
 
     def paint_orders(self, game):
         for i in range(0, len(get_power_names(game))):
             for order in game.get_orders(get_power_names(game)[i]):
                 sp = order.split(' ')
-                if sp[2] == 'H':
-                    self.draw_tinted(self.shield, self.power_colors[i], self.army_positions.get(sp[1]))
-                elif sp[2] == '-':
-                    self.draw_arrow(self.army_positions.get(sp[1]), self.army_positions.get(sp[3]), self.power_colors[i])
-                elif sp[2] == 'S':
-                    # mypos = self.army_positions.get(sp[1])
-                    if len(sp) == 5:
-                        supported = self.army_positions.get(sp[3])
-                        # print(dir_v(mypos, supported))
-                        # draw_arrow(mypos, supported, power_colors[i])
-                        # draw_tinted(shield, power_colors[i], interpolation(mypos, supported, 0.5))
-                    else:
+                unit = self.army_positions.get(sp[1])
+                col = self.alt_power_colors[i]
+                if sp[2] == 'S': #support...
+                    print(sp)
+                    if len(sp) == 7: #...offensive
                         supported = self.army_positions.get(sp[4])
-                        # target = army_positions.get(sp[6])
-                        # draw_arrow(mypos, interpolation(supported, target, 0.7), power_colors[i])
+                        target = self.army_positions.get(sp[6])
+                        self.draw_supp_o(unit, supported, target, col)
+                    else: #...defensive
+                        supported = self.army_positions.get(sp[4])
+                        self.draw_supp_d(unit, supported, col)
+                elif sp[2] == 'H': #hold the position
+                    self.draw_defense(unit, col)
+                elif sp[2] == '-': #move
+                    self.draw_arrow(unit, self.army_positions.get(sp[3]), col)
         display.update()
 
 
