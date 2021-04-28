@@ -1,4 +1,6 @@
 import json
+import random
+
 import numpy as np
 from collections import defaultdict
 from diplomacy import Game, Power
@@ -15,10 +17,11 @@ class LastPhaseInfo:
 
 
 class QtableHandler:
-    def __init__(self, game: Game):
+    def __init__(self, game: Game, agent_powers: list):
         self.game = game
         self.lastTurnInfo = LastPhaseInfo()
         self.q_table = self.load_q_table()
+        self.agent_powers =  agent_powers
 
     def load_q_table(self):
         q_table = defaultdict(self.default_value)
@@ -31,13 +34,25 @@ class QtableHandler:
                 q_table[nations] = defaultdict(self.default_value, q_table[nations])  # making deafultdics
             a_file.close()
         except:
-            print("")
+            print("File not loaded")
         return q_table
 
     def chose_orders(self, power_name):
+        if power_name in self.agent_powers:
+            return self.chose_on_qtable(power_name)
+        else:
+            return self.chose_on_random(power_name)
+
+    def chose_on_random(self,power_name):
+        possible_orders = self.game.get_all_possible_orders()
+        return [random.choice(possible_orders[loc]) for loc in self.game.get_orderable_locations(power_name)
+                        if possible_orders[loc]]
+
+    def chose_on_qtable(self,power_name):
         game_hash = self.lastTurnInfo.power_hash[power_name]
         power_orders = []
         nation_location_orders = {}
+
         if self.q_table[power_name][game_hash] == "Not Present":
             self.q_table[power_name][game_hash] = self.make_new_entry(power_name)
         for loc in self.game.get_orderable_locations(power_name):
@@ -56,6 +71,7 @@ class QtableHandler:
 
         self.lastTurnInfo.nation_location_orders[power_name] = nation_location_orders
         return power_orders
+
 
     def make_new_entry(self, power_name) -> dict:
         power_posible_orders = {loc: {order: 0 for order in self.game.get_all_possible_orders()[loc]} for loc in
@@ -93,10 +109,11 @@ class QtableHandler:
 
     def set_reward(self):
         for power_name, power in self.game.powers.items():
-            reward = self.set_gain(power)
-            for loc_order in self.lastTurnInfo.nation_location_orders[power_name].items():
-                self.q_table[power_name][self.lastTurnInfo.power_hash[power_name]][loc_order[0]][loc_order[1]] += \
-                    (power.influence.__len__() - self.lastTurnInfo.power_influence[power_name]) + reward
+            if power_name in self.agent_powers:
+                reward = self.set_gain(power)
+                for loc_order in self.lastTurnInfo.nation_location_orders[power_name].items():
+                    self.q_table[power_name][self.lastTurnInfo.power_hash[power_name]][loc_order[0]][loc_order[1]] += \
+                        (power.influence.__len__() - self.lastTurnInfo.power_influence[power_name])
 
     def set_turn_info(self):
         self.lastTurnInfo.phase = self.game.phase_type
