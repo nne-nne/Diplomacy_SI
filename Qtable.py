@@ -41,9 +41,9 @@ class QtableHandler:
 
     def chose_orders(self, power_name):
         if power_name in self.agent_powers:
+            self.attempts += 1
             return self.chose_on_qtable(power_name)
         else:
-            self.attempts += 1
             return self.chose_on_random(power_name)
 
     def chose_on_random(self,power_name):
