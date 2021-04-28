@@ -35,6 +35,9 @@ while not game.is_game_done:
             exit(0)
         iterator = 0
         print(state)
+        print("Accuracy: {0}".format(q_table_Handler.get_accuracy()))
+        print(game.get_centers("GERMANY").__len__())
+
         game = load_saved_games_from_disk("game.json")[0]
         q_table_Handler.game = game
 
