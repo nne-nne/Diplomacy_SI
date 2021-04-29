@@ -318,7 +318,6 @@ class GameVisualizer:
                 unit = self.army_positions.get(sp[1])
                 col = self.alt_power_colors[i]
                 if sp[2] == 'S': #support...
-                    print(sp)
                     if len(sp) == 7: #...offensive
                         supported = self.army_positions.get(sp[4])
                         target = self.army_positions.get(sp[6])

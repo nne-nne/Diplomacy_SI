@@ -41,3 +41,56 @@ def get_locs_with_units(game, power_name):
 def get_power_names(game):
     return list(game.get_map_power_names())
 
+# H for hold, M for movement, D for defensive support, O for offensive support
+def get_order_type(order):
+    order_elems = order.split(' ')
+    if order_elems[2] == 'H':  # hold the position
+        return 'H'
+    elif order_elems[2] == '-':  # move
+        return 'M'
+    elif order_elems[2] == 'S':  # support...
+        if len(order_elems) == 5:  # defensive support
+            return 'D'
+        else:
+            return 'O'
+
+#return the teritory army is trying to take or defend
+def get_order_target(order):
+    order_elems = order.split(' ')
+    if order_elems[2] == 'H':  # hold the position
+        result = order_elems[1].split('/')[0] # e.g. A >>VIE<< H  # split('/') is for multi-coast like STP/SC
+    else:
+        result = order_elems[-1].split('/')[0] # e.g. A VIE - >>BUD<< or A VIE S A GAL - >>BUD<<
+    return result
+
+def exist_enemy_order(game:Game, last_turn_info, power_name, dest, ord_types):
+    for enemy_name in get_power_names(game):
+        if enemy_name != power_name:
+            their_orders = last_turn_info.nation_location_orders[enemy_name].items()
+            for order in their_orders:
+                if get_order_target(order[1]) == dest and get_order_type(order[1]) in ord_types: return True
+    return False
+
+def exist_enemy_order_by_loc(game:Game, last_turn_info, power_name, dest, ord_types):
+    for enemy_name in get_power_names(game):
+        if enemy_name != power_name:
+            their_orders = last_turn_info.nation_location_orders[enemy_name].items()
+            for order in their_orders:
+                if order[0] == dest and get_order_type(order[1]) in ord_types: return True
+    return False
+
+def exist_own_order(orders, dest, ord_types):
+    for order in orders:
+        if get_order_target(order[1]) == dest and get_order_type(order[1]) in ord_types: return True
+    return False
+
+def exist_own_order_by_loc(orders, dest, ord_types):
+    for order in orders:
+        if order[0] == dest and get_order_type(order[1]) in ord_types: return True
+    return False
+
+def count_own_orders(orders, dest, ord_types)->int:
+    sum = 0
+    for order in orders:
+        if get_order_target(order[1]) == dest and get_order_type(order[1]) in ord_types: sum += 1
+    return sum
