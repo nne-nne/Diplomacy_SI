@@ -79,8 +79,11 @@ def are_orders_valid(orders):
     for order in orders:
         order_type = get_order_type(order)
         order_target = get_order_target(order)
+        order_origin = get_order_origin(order)
         if order_type == 'M' and exist_order(orders, order_target, '', ['H', 'D', 'O']):
             return False  # attacking own units that Hold, support Defence or Offence does not make sense
+        if order_type == 'M' and exist_order(orders, order_target, order_origin, ['M']):
+            return False  # A attacking B while B attacking A
         if order_type == 'O' and not exist_order(orders, '', order_target, ['M']):
             return False  # offensive support without coverage
         if order_type == 'D' and not exist_order(orders, order_target, '', ['H', 'D', 'O']):
