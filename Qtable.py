@@ -37,6 +37,19 @@ class QtableHandler:
             print("table not loaded")
         return q_table
 
+    def choose_order(self, power_name, game_hash, loc):
+        posible_actions = [order for order in self.q_table[power_name][game_hash][loc]]
+        # Wyciągniecie prawdopodobieństwa wybrania danej akcji
+        logits = [self.q_table[power_name][game_hash][loc][order] for order in
+                  self.q_table[power_name][game_hash][loc]]
+        logits_sum = np.sum(logits)
+        if logits_sum != 0:
+            probs = logits / np.sum(logits)
+        else:
+            probs = [1 / len(logits)] * len(logits)  # wszystkie ruchy są jednakowo złe xD
+        return np.random.choice(posible_actions, p=probs)
+
+
     def chose_orders(self, power_name):
         game_hash = self.lastTurnInfo.power_hash[power_name]
         power_orders = []
@@ -44,36 +57,12 @@ class QtableHandler:
         if self.q_table[power_name][game_hash] == "Not Present":
             self.q_table[power_name][game_hash] = self.make_new_entry(power_name)
         for loc in self.game.get_orderable_locations(power_name):
-            #print("akcje wybiera ", loc)
-            posible_actions = [order for order in self.q_table[power_name][game_hash][loc]]
-            #print("mozliwosci:")
-            #print(posible_actions)
-            # Wyciągniecie prawdopodobieństwa wybrania danej akcji
-            logits = [self.q_table[power_name][game_hash][loc][order] for order in
-                      self.q_table[power_name][game_hash][loc]]
-            logits_sum = np.sum(logits)
-            if logits_sum != 0:
-                probs = logits / np.sum(logits)
-            else:
-                probs = [1/len(logits)]*len(logits) #wszystkie ruchy są jednakowo złe xD
-            # print("logits before:")
-            # print(logits)
-            # print("suma: ", np.sum(logits))
-            # if np.sum(logits) != 0:
-            #     logits = logits / np.sum(logits)
-            # print("logits:")
-            # print(logits)
-            # logits_exp = np.exp(logits)
-            # print("logits exp:")
-            # print(logits_exp)
-            # probs = logits_exp / np.sum(logits_exp)
-            # print("probs:")
-            # print(probs)
-            order = np.random.choice(posible_actions, p=probs)
-            #print("wybrany ruch:")
-            #print(order)
+            order = self.choose_order(power_name, game_hash, loc)
             power_orders.append(str(order))
             nation_location_orders[loc] = str(order)  # potrzebne do obliczania reward
+
+        print("power orders: ", power_orders)
+        print("support orders: ", filter_support_orders(power_orders))
 
         self.lastTurnInfo.nation_location_orders[power_name] = nation_location_orders
         return power_orders
@@ -145,7 +134,7 @@ class QtableHandler:
             if exist_own_order_by_loc(self_orders, target, ['H', 'D', 'O']):
                 return -5
             elif exist_own_order_by_loc(self_orders, target, ['M']):
-                return -3
+                return 0
             elif target in get_locs_with_units(self.game, power_name): # stoi tam, czyli zdobył
                 if target in self.game.map.scs: # zajął miasto, yahoo!
                     if target not in self.lastTurnInfo.power_scs:  # nie miał tego wcześniej

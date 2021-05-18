@@ -63,6 +63,31 @@ def get_order_target(order):
         result = order_elems[-1].split('/')[0] # e.g. A VIE - >>BUD<< or A VIE S A GAL - >>BUD<<
     return result
 
+def get_order_origin(order):
+    order_elems = order.split(' ')
+    return order_elems[1]
+
+
+def filter_support_orders(orders):
+    result = []
+    for order in orders:
+        if get_order_type(order) in ['O', 'D']:
+            result.append(order)
+    return result
+
+def are_orders_valid(orders):
+    for order in orders:
+        order_type = get_order_type(order)
+        order_target = get_order_target(order)
+        if order_type == 'M' and exist_order(orders, order_target, '', ['H', 'D', 'O']):
+            return False  # attacking own units that Hold, support Defence or Offence does not make sense
+        if order_type == 'O' and not exist_order(orders, '', order_target, ['M']):
+            return False  # offensive support without coverage
+        if order_type == 'D' and not exist_order(orders, order_target, '', ['H', 'D', 'O']):
+            return False  # defensive support without coverage
+    return True
+
+#######################   dla rozkazów w formacie [LOC, ORDER]     ##################################
 def exist_enemy_order(game:Game, last_turn_info, power_name, dest, ord_types):
     for enemy_name in get_power_names(game):
         if enemy_name != power_name:
@@ -79,6 +104,19 @@ def exist_enemy_order_by_loc(game:Game, last_turn_info, power_name, dest, ord_ty
                 if order[0] == dest and get_order_type(order[1]) in ord_types: return True
     return False
 
+def exist_exact_order(orders, ord_type, src, dst=''):
+    for order in orders:
+        elems = order.split(' ')
+        if elems[1] == src:
+            if ord_type == 'M':
+                if elems[2] == '-' and elems [3] == dst: return True
+                else: return False
+            else:
+                if elems[2] == 'H': return True
+                else: return False
+
+
+
 def exist_own_order(orders, dest, ord_types):
     for order in orders:
         if get_order_target(order[1]) == dest and get_order_type(order[1]) in ord_types: return True
@@ -94,3 +132,13 @@ def count_own_orders(orders, dest, ord_types)->int:
     for order in orders:
         if get_order_target(order[1]) == dest and get_order_type(order[1]) in ord_types: sum += 1
     return sum
+
+
+#######################   dla rozkazów w formacie [ORDER]     ##################################
+def exist_order(orders, src='', dst='', ord_types=['M', 'H', 'D', 'O', 'C']):
+    for order in orders:
+        if get_order_type(order) in ord_types:
+            if src == '' or get_order_origin(order) == src:
+                if dst == '' or get_order_target(order) == dst:
+                    return True
+    return False
