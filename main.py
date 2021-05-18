@@ -16,12 +16,18 @@ while not game.is_game_done:
     q_table_Handler.set_turn_info()
 
     # settings order
-    for power_name, power in game.powers.items():
-        power_orders = q_table_Handler.chose_orders(power_name)
-        game.set_orders(power_name, power_orders)
+    phase = game.get_current_phase()[-1]
+    if phase == 'M':
+        for power_name, power in game.powers.items():
+            power_orders = q_table_Handler.chose_orders(power_name)
+            game.set_orders(power_name, power_orders)
+    else:
+        for power_name, power in game.powers.items():
+            power_orders = q_table_Handler.chose_on_random(power_name)
+            game.set_orders(power_name, power_orders)
 
     visualizer.paint_orders(game)
-    phase = game.get_current_phase()[-1]
+
 
     game.process()
 
