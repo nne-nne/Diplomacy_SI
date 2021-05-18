@@ -76,7 +76,6 @@ def filter_support_orders(orders):
     return result
 
 def are_orders_valid(orders):
-    print("validating orders: ", orders)
     for order in orders:
         order_type = get_order_type(order)
         order_target = get_order_target(order)

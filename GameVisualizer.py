@@ -56,6 +56,19 @@ class VisualTerit:
             self.image = image.load(path)
 
 
+def mantain_window():
+    running = True
+    while running:
+        print("działam sobie")
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+                pygame.quit()
+            if event.type == pygame.MOUSEBUTTONUP:
+                pass
+        pygame.display.flip()
+
+
 class GameVisualizer:
     def __init__(self):
         # set canvas size variables
@@ -330,7 +343,6 @@ class GameVisualizer:
                 elif sp[2] == '-': #move
                     self.draw_arrow(unit, self.army_positions.get(sp[3]), col)
         display.update()
-
 
 
 

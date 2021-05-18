@@ -3,16 +3,21 @@ from Hasher import *
 from Qtable import *
 from diplomacy import Game, Power
 from diplomacy.utils.export import to_saved_game_format, load_saved_games_from_disk
+from GameSaver import *
 
 game = Game()
 set_starting_influence(game)
-visualizer = GameVisualizer()
+saver = GameSaver()
+#visualizer = GameVisualizer()
 q_table_Handler = QtableHandler(game, ["GERMANY"])
 iterator = 0
 state = 0
-while not game.is_game_done:
+
+finish = False
+while not game.is_game_done and not finish:
+    saver.save_game(game, "gierka")
     iterator += 1
-    visualizer.paint_map(game)
+    #visualizer.paint_map(game)
     q_table_Handler.set_turn_info()
 
     # settings order
@@ -26,8 +31,8 @@ while not game.is_game_done:
             power_orders = q_table_Handler.chose_on_random(power_name)
             game.set_orders(power_name, power_orders)
 
-    visualizer.paint_orders(game)
-
+    #visualizer.paint_orders(game)
+    saver.save_game(game, "gierka")
 
     game.process()
 
@@ -46,7 +51,9 @@ while not game.is_game_done:
         print("Accuracy: {0}".format(q_table_Handler.get_accuracy()))
         print(game.get_centers("GERMANY").__len__())
 
-        game = load_saved_games_from_disk("game.json")[0]
-        q_table_Handler.game = game
+        finish = True
+        # q_table_Handler.game = game
+        # game = load_saved_games_from_disk("game.json")[0]
 
 
+saver.start_visualisation("gierka")
