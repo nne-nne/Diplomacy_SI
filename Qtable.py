@@ -92,7 +92,8 @@ class QtableHandler:
         return power_orders
 
     def make_new_entry(self, power_name) -> dict:
-        self.miss_hits += 1
+        if power_name in self.agent_powers:
+            self.miss_hits += 1
         power_posible_orders = {loc: {order: 0 for order in self.game.get_all_possible_orders()[loc]} for loc in
                                 self.game.get_orderable_locations(power_name)
                                 if self.game.get_all_possible_orders()[loc]}
