@@ -52,9 +52,12 @@ class QtableHandler:
             orders =  self.chose_on_qtable(power_name)
             while not are_orders_valid(orders):
                 orders = self.chose_on_qtable(power_name)
-            return orders
         else:
-            return self.chose_on_random(power_name)
+            orders =  self.chose_on_random(power_name)
+            while not are_orders_valid(orders):
+                orders = self.chose_on_random(power_name)
+        return orders
+
 
     def chose_on_random(self, power_name):
         game_hash = self.lastTurnInfo.power_hash[power_name]
