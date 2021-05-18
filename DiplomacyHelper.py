@@ -76,6 +76,7 @@ def filter_support_orders(orders):
     return result
 
 def are_orders_valid(orders):
+    print("validating orders: ", orders)
     for order in orders:
         order_type = get_order_type(order)
         order_target = get_order_target(order)
@@ -84,10 +85,15 @@ def are_orders_valid(orders):
             return False  # attacking own units that Hold, support Defence or Offence does not make sense
         if order_type == 'M' and exist_order(orders, order_target, order_origin, ['M']):
             return False  # A attacking B while B attacking A
-        if order_type == 'O' and not exist_order(orders, '', order_target, ['M']):
-            return False  # offensive support without coverage
+        if count_orders(orders, order_target, ['M']) > 1:
+            return False  # attacking from more than 1 teritory
         if order_type == 'D' and not exist_order(orders, order_target, '', ['H', 'D', 'O']):
             return False  # defensive support without coverage
+        if order_type == 'O':
+            elems = order.split(' ')
+            supported = elems[4]
+            if not exist_order(orders, supported, order_target, ['M']):
+                return False  # offensive support without coverage
     return True
 
 #######################   dla rozkazów w formacie [LOC, ORDER]     ##################################
@@ -118,8 +124,6 @@ def exist_exact_order(orders, ord_type, src, dst=''):
                 if elems[2] == 'H': return True
                 else: return False
 
-
-
 def exist_own_order(orders, dest, ord_types):
     for order in orders:
         if get_order_target(order[1]) == dest and get_order_type(order[1]) in ord_types: return True
@@ -145,3 +149,9 @@ def exist_order(orders, src='', dst='', ord_types=['M', 'H', 'D', 'O', 'C']):
                 if dst == '' or get_order_target(order) == dst:
                     return True
     return False
+
+def count_orders(orders, dest, ord_types)->int:
+    sum = 0
+    for order in orders:
+        if get_order_target(order) == dest and get_order_type(order) in ord_types: sum += 1
+    return sum
