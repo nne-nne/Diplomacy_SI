@@ -17,7 +17,10 @@ class LastPhaseInfo:
 
 
 class QtableHandler:
-    def __init__(self, game: Game, agent_powers: list):
+    def __init__(self, game: Game, agent_powers: list, min_learnig_rate=0.1, randomizer=0.01):
+        self.randomizer = randomizer
+        self.min_learnig_rate = min_learnig_rate
+        self.interation_number = 0
         self.game = game
         self.miss_hits = 0
         self.attempts = 0
@@ -42,16 +45,27 @@ class QtableHandler:
     def chose_orders(self, power_name):
         if power_name in self.agent_powers:
             self.attempts += 1
+            if random.random() < self.randomizer:
+                return self.chose_on_random(power_name)
             return self.chose_on_qtable(power_name)
         else:
             return self.chose_on_random(power_name)
 
-    def chose_on_random(self,power_name):
+    def chose_on_random(self, power_name):
+        game_hash = self.lastTurnInfo.power_hash[power_name]
         possible_orders = self.game.get_all_possible_orders()
-        return [random.choice(possible_orders[loc]) for loc in self.game.get_orderable_locations(power_name)
-                        if possible_orders[loc]]
+        power_orders = []
+        nation_location_orders = {}
+        if self.q_table[power_name][game_hash] == "Not Present":
+            self.q_table[power_name][game_hash] = self.make_new_entry(power_name)
+        for loc in self.game.get_orderable_locations(power_name):
+            order = random.choice(possible_orders[loc])
+            power_orders.append(str(order))
+            nation_location_orders[loc] = str(order)
+        self.lastTurnInfo.nation_location_orders[power_name] = nation_location_orders
+        return power_orders
 
-    def chose_on_qtable(self,power_name):
+    def chose_on_qtable(self, power_name):
         game_hash = self.lastTurnInfo.power_hash[power_name]
         power_orders = []
         nation_location_orders = {}
@@ -64,7 +78,7 @@ class QtableHandler:
             logits = [self.q_table[power_name][game_hash][loc][order] for order in
                       self.q_table[power_name][game_hash][loc]]
             if np.sum(logits) != 0:
-                logits = logits / np.sum(logits)
+                logits = logits /abs(np.sum(logits))
             logits_exp = np.exp(logits)
             probs = logits_exp / np.sum(logits_exp)
             # wybranie akcji
@@ -125,7 +139,8 @@ class QtableHandler:
             self.lastTurnInfo.power_influence[power_name] = power.influence.__len__()
 
     def get_accuracy(self):
-        return 1 - (self.miss_hits/self.attempts)
+        return 1 - (self.miss_hits / self.attempts)
+
     @staticmethod
     def default_value() -> str:
         return "Not Present"
