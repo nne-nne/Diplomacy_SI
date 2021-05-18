@@ -21,10 +21,12 @@ while not game.is_game_done:
         game.set_orders(power_name, power_orders)
 
     visualizer.paint_orders(game)
+    phase = game.get_current_phase()[-1]
 
     game.process()
 
-    q_table_Handler.set_reward()
+    if phase == 'M':
+        q_table_Handler.set_reward()
     adjust_influence(game)
 
     if iterator == 10:
