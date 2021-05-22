@@ -59,6 +59,7 @@ class VisualTerit:
 def mantain_window():
     running = True
     while running:
+        pygame.display.update()
         print("działam sobie")
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -66,7 +67,7 @@ def mantain_window():
                 pygame.quit()
             if event.type == pygame.MOUSEBUTTONUP:
                 pass
-        pygame.display.flip()
+
 
 
 class GameVisualizer:
@@ -243,6 +244,7 @@ class GameVisualizer:
         self.heightmap = image.load('heightmap.png')
         self.papertexture = image.load('newspaper2.png')
         self.mapgizmos = image.load('MapGizmos.png')
+        pygame.init()
 
     def draw_tinted(self, img, col, pos=(0, 0)):
         tinted = img.convert_alpha()
