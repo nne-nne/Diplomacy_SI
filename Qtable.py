@@ -47,13 +47,13 @@ class QtableHandler:
     def chose_orders(self, power_name):
         if power_name in self.agent_powers:
             self.attempts += 1
-            if random.random() < self.randomizer:
+            if self.lastTurnInfo.phase != "M" or random.random() < self.randomizer:
                 return self.chose_on_random(power_name)
             orders = self.chose_on_qtable(power_name)
             while not are_orders_valid(orders):
                 orders = self.chose_on_qtable(power_name)
         else:
-            orders =  self.chose_on_random(power_name)
+            orders = self.chose_on_random(power_name)
             while not are_orders_valid(orders):
                 orders = self.chose_on_random(power_name)
         return orders
