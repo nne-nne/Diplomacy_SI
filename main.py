@@ -28,7 +28,7 @@ while not game.is_game_done and not finish:
             game.set_orders(power_name, power_orders)
     else:
         for power_name, power in game.powers.items():
-            power_orders = q_table_Handler.chose_on_random(power_name)
+            power_orders = q_table_Handler.chose_on_random(power_name, False)
             game.set_orders(power_name, power_orders)
 
     #visualizer.paint_orders(game)

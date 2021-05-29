@@ -1,5 +1,5 @@
 from diplomacy import Game
-
+import numpy as np
 
 def set_starting_influence(game):
     game.get_power('AUSTRIA').influence.extend(['GAL', 'BOH', 'TYR'])
@@ -94,6 +94,40 @@ def are_orders_valid(orders):
             if not exist_order(orders, supported, order_target, ['M']):
                 return False  # offensive support without coverage
     return True
+
+def adjust_probablilities(probs):
+    prob_sum = sum(probs)
+    result = []
+    for prob in probs:
+        result.append(prob/prob_sum)
+    return result
+
+def choose_valid_order(posible_actions, power_orders, probs):
+    probs = probs.tolist()
+    while len(posible_actions) > 1:
+        order = np.random.choice(posible_actions, p=probs)
+        power_orders.append(order)
+        if are_orders_valid(power_orders):
+            return order
+        else:
+            power_orders.pop()
+            i = posible_actions.index(order)
+            probs.pop(i)
+            probs = adjust_probablilities(probs)
+            posible_actions.pop(i)
+    return posible_actions[0]  # only 1 possible action left
+
+def random_valid_order(posible_actions, power_orders):
+    while len(posible_actions) > 1:
+        order = np.random.choice(posible_actions)
+        power_orders.append(order)
+        if are_orders_valid(power_orders):
+            return order
+        else:
+            power_orders.pop()
+            posible_actions.remove(order)
+    return posible_actions[0]  # only 1 possible action left
+
 
 #######################   dla rozkazów w formacie [LOC, ORDER]     ##################################
 def exist_enemy_order(game:Game, last_turn_info, power_name, dest, ord_types):
