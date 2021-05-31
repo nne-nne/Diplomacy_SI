@@ -53,6 +53,9 @@ class QtableHandler:
             while not are_orders_valid(orders):
                 orders = self.chose_on_qtable(power_name)
         else:
+            if self.lastTurnInfo.phase != "M":
+                return self.chose_on_random(power_name)
+
             orders = self.chose_on_random(power_name)
             while not are_orders_valid(orders):
                 orders = self.chose_on_random(power_name)
