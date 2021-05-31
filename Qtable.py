@@ -45,15 +45,17 @@ class QtableHandler:
         return q_table
 
     def chose_orders(self, power_name):
+        if self.lastTurnInfo.phase != "M":
+            return self.chose_on_random(power_name, validate=False)
+
         if power_name in self.agent_powers:
             self.attempts += 1
-            if self.lastTurnInfo.phase != "M" or random.random() < self.randomizer:
+            if random.random() < self.randomizer:
                 return self.chose_on_random(power_name)
             orders = self.chose_on_qtable(power_name)
         else:
             orders = self.chose_on_random(power_name)
         return orders
-
 
     def chose_on_random(self, power_name, validate=True):
         game_hash = self.lastTurnInfo.power_hash[power_name]
@@ -97,7 +99,7 @@ class QtableHandler:
         return power_orders
 
     def make_new_entry(self, power_name) -> dict:
-        if power_name in self.agent_powers:
+        if power_name in self.agent_powers and self.lastTurnInfo.phase == "M":
             self.miss_hits += 1
         power_posible_orders = {loc: {order: 0 for order in self.game.get_all_possible_orders()[loc]} for loc in
                                 self.game.get_orderable_locations(power_name)

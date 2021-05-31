@@ -9,7 +9,7 @@ game = Game()
 set_starting_influence(game)
 saver = GameSaver()
 #visualizer = GameVisualizer()
-q_table_Handler = QtableHandler(game, ["GERMANY"])
+q_table_Handler = QtableHandler(game, game.get_map_power_names())
 iterator = 0
 state = 0
 turn_number = 4
