@@ -50,27 +50,23 @@ class QtableHandler:
             if self.lastTurnInfo.phase != "M" or random.random() < self.randomizer:
                 return self.chose_on_random(power_name)
             orders = self.chose_on_qtable(power_name)
-            while not are_orders_valid(orders):
-                orders = self.chose_on_qtable(power_name)
         else:
-            if self.lastTurnInfo.phase != "M":
-                return self.chose_on_random(power_name)
-
             orders = self.chose_on_random(power_name)
-            while not are_orders_valid(orders):
-                orders = self.chose_on_random(power_name)
         return orders
 
 
-    def chose_on_random(self, power_name):
+    def chose_on_random(self, power_name, validate=True):
         game_hash = self.lastTurnInfo.power_hash[power_name]
-        possible_orders = self.game.get_all_possible_orders()
         power_orders = []
         nation_location_orders = {}
         if self.q_table[power_name][game_hash] == "Not Present":
             self.q_table[power_name][game_hash] = self.make_new_entry(power_name)
         for loc in self.game.get_orderable_locations(power_name):
-            order = random.choice(possible_orders[loc])
+            possible_orders = self.game.get_all_possible_orders()[loc]
+            if validate:
+                order = random_valid_order(possible_orders, power_orders)
+            else:
+                order = random.choice(possible_orders)
             power_orders.append(str(order))
             nation_location_orders[loc] = str(order)
         self.lastTurnInfo.nation_location_orders[power_name] = nation_location_orders
@@ -93,7 +89,7 @@ class QtableHandler:
             logits_exp = np.exp(logits)
             probs = logits_exp / np.sum(logits_exp)
             # wybranie akcji
-            order = np.random.choice(posible_actions, p=probs)
+            order = choose_valid_order(posible_actions, power_orders, probs)
             power_orders.append(str(order))
             nation_location_orders[loc] = str(order)  # potrzebne do obliczania reward
 

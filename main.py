@@ -15,6 +15,7 @@ state = 0
 turn_number = 4
 finish = False
 while not game.is_game_done and not finish:
+    iterator += 1
     #visualizer.paint_map(game)
     q_table_Handler.set_turn_info()
 
