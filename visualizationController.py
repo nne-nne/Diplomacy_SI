@@ -8,13 +8,13 @@ import os
 class VisualizationController:
     def __init__(self, directory, name):
         self.i = 0
-        self.limit = 9
+        self.limit = 40
 
         self.directory = directory
         self.game_name = name
 
         #self.game = load_saved_games_from_disk(os.path.join(directory, game_name,'frame_' + str(i)+'.json'))[0]
-        self.game = load_saved_games_from_disk('frame_' + str(self.i)+'.json')[0]
+        self.game = load_saved_games_from_disk('./frames/frame_' + str(self.i)+'.json')[0]
 
         self.visualizer = GameVisualizer()
         self.visualizer.paint_map(self.game)
@@ -23,7 +23,7 @@ class VisualizationController:
 
     def change_frame(self, change:int):
         self.i = (self.i + change) % self.limit
-        self.game = load_saved_games_from_disk('frame_' + str(self.i) + '.json')[0]
+        self.game = load_saved_games_from_disk('./frames/frame_' + str(self.i) + '.json')[0]
         # self.game = load_saved_games_from_disk  \
         # (os.path.join(self.directory, self.game_name,'frame_' + str(self.i)+'.json'))[0]
         self.visualizer.paint_map(self.game)

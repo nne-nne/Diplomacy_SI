@@ -108,6 +108,7 @@ def choose_valid_order(posible_actions, power_orders, probs):
         order = np.random.choice(posible_actions, p=probs)
         power_orders.append(order)
         if are_orders_valid(power_orders):
+            power_orders.pop()
             return order
         else:
             power_orders.pop()

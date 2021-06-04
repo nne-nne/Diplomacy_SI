@@ -1,4 +1,5 @@
 import json
+import math
 import random
 
 import numpy as np
@@ -73,7 +74,11 @@ class QtableHandler:
             nation_location_orders[loc] = str(order)
         self.lastTurnInfo.nation_location_orders[power_name] = nation_location_orders
         return power_orders
-
+    def debug(self, probs) -> bool:
+        for prob in probs:
+            if math.isnan(prob):
+                return True
+        return False
     def chose_on_qtable(self, power_name):
         game_hash = self.lastTurnInfo.power_hash[power_name]
         power_orders = []
@@ -86,8 +91,8 @@ class QtableHandler:
             # Wyciągniecie prawdopodobieństwa wybrania danej akcji
             logits = [self.q_table[power_name][game_hash][loc][order] for order in
                       self.q_table[power_name][game_hash][loc]]
-            if np.sum(logits) != 0:
-                logits = logits / abs(np.sum(logits))
+            if np.sum(np.abs(logits)) != 0:
+                logits = logits / np.sum(np.abs(logits))
             logits_exp = np.exp(logits)
             probs = logits_exp / np.sum(logits_exp)
             # wybranie akcji
@@ -96,6 +101,22 @@ class QtableHandler:
             nation_location_orders[loc] = str(order)  # potrzebne do obliczania reward
 
         self.lastTurnInfo.nation_location_orders[power_name] = nation_location_orders
+        return power_orders
+    def chose_best(self, power_name):
+        game_hash = self.lastTurnInfo.power_hash[power_name]
+        power_orders = []
+
+        if self.q_table[power_name][game_hash] == "Not Present":
+            self.q_table[power_name][game_hash] = self.make_new_entry(power_name)
+
+        for loc in self.game.get_orderable_locations(power_name):
+            posible_actions = [order for order in self.q_table[power_name][game_hash][loc]]
+            # Wyciągniecie prawdopodobieństwa wybrania danej akcji
+            logits = [self.q_table[power_name][game_hash][loc][order] for order in
+                      self.q_table[power_name][game_hash][loc]]
+            # wybranie akcji
+            order = posible_actions[logits.index(max(logits))]
+            power_orders.append(str(order))
         return power_orders
 
     def make_new_entry(self, power_name) -> dict:
@@ -226,7 +247,7 @@ class QtableHandler:
             self.lastTurnInfo.power_scs[power_name] = self.game.get_centers(power_name)
 
     def get_accuracy(self):
-        return 1 - (self.miss_hits / self.attempts)
+        return 1 - (self.miss_hits / self.attempts) if self.attempts != 0 else "No accuracy"
 
     @staticmethod
     def default_value() -> str:
