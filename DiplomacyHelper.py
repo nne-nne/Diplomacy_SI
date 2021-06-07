@@ -123,6 +123,7 @@ def random_valid_order(posible_actions, power_orders):
         order = np.random.choice(posible_actions)
         power_orders.append(order)
         if are_orders_valid(power_orders):
+            power_orders.pop()
             return order
         else:
             power_orders.pop()

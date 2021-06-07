@@ -12,7 +12,7 @@ class GameSaver:
 
     def save_game(self, game:Game, name):
         #to_saved_game_format(game, output_path = os.path.join('/saved_games',name,'frame_' + str(self.save_frame) + '.json'))
-        to_saved_game_format(game, output_path = 'frame_' + str(self.save_frame) + '.json')
+        to_saved_game_format(game, output_path = './frames/frame_' + str(self.save_frame) + '.json',output_mode='w')
         self.save_frame += 1
 
 

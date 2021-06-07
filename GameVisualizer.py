@@ -239,11 +239,11 @@ class GameVisualizer:
             'YOR': (347, 365),
             }
         # import images
-        self.bcg = image.load('background.bmp')
-        self.seaborders = image.load('seaborders.png')
-        self.heightmap = image.load('heightmap.png')
-        self.papertexture = image.load('newspaper2.png')
-        self.mapgizmos = image.load('MapGizmos.png')
+        self.bcg = image.load('resources/background.bmp')
+        self.seaborders = image.load('resources/seaborders.png')
+        self.heightmap = image.load('resources/heightmap.png')
+        self.papertexture = image.load('resources/newspaper2.png')
+        self.mapgizmos = image.load('resources/MapGizmos.png')
         pygame.init()
 
     def draw_tinted(self, img, col, pos=(0, 0)):

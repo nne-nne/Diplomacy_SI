@@ -86,7 +86,7 @@ def play_best(game: Game, save_game: bool,agent_nation: list, turn_number = 3, r
 
         # settings order
         for power_name, power in game.powers.items():
-            if power_name in agent_nations:
+            if power_name in agent_nation:
                 power_orders = q_table_Handler.chose_best(power_name)
             else:
                 power_orders = q_table_Handler.chose_orders(power_name)
@@ -102,6 +102,6 @@ def play_best(game: Game, save_game: bool,agent_nation: list, turn_number = 3, r
 
 
 game = load_saved_games_from_disk("game.json")[0]
-agent_nations = list(game.get_map_power_names())
-agent_nations.remove("GERMANY")
+# agent_nations = list(game.get_map_power_names())
+# agent_nations.remove("GERMANY")
 play_best(game, True, ["GERMANY"], 40, 1)

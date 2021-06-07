@@ -1,6 +1,8 @@
 import pygame
 from GameVisualizer import *
 from diplomacy import Game
+from DiplomacyHelper import *
+from Hasher import *
 from diplomacy.utils.export import to_saved_game_format, load_saved_games_from_disk
 import os
 
